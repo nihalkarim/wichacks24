@@ -7,7 +7,7 @@ let pose;
 let skeleton;
 
 //these variables are used to initialize and store the flowfield and the particles
-let scl = 10;
+let scl = 50;
 let cols, rows;
 let inc = 0.1;
 let zOff = 0;
@@ -15,23 +15,21 @@ let particles = [];
 let flowfield = [];
 
 //these variables are used to change the particle properties
-let hu = 120
-let sat;
-let bright;
-let hueInc;
-let strWght;
-let angleMult;
-let particleNum;
-
-//these variables are used to create the sliders (TEMP?)
-let hueIncSlider, satSlider, brightSlider, alphSlider
-let strWghtSlider
-let angleMultSlider
-let particleNumSlider;
+let hu = 0;
+let sat = 100; //max 100
+let bright = 100; //max 100
+let alph = 50; //max 100
+let hueInc = 1;
+let strWght = 2;
+let angleMult = 15;
+let zOffInc = 0.002;
+let particleNum = 500;
 
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(windowWidth, windowHeight + 150);
+  colorMode(HSB, 360, 100, 100, 100);
+  background(50);
 
   cols = floor(width / scl);
   rows = floor(height / scl);
@@ -39,41 +37,16 @@ function setup() {
   for (let i = 0; i < particleNum; i++) {
     particles[i] = new Particle();
   }
-  background(50);
 
-  //create sliders
-  hueIncSlider = createSlider(0, 10, 0.1);
-  hueIncSlider.size(75);
-
-  satSlider = createSlider(0, 100, 100);
-  satSlider.size(75);
-
-  brightSlider = createSlider(0, 100, 100);
-  brightSlider.size(75);
-
-  alphSlider = createSlider(0, 100, 100);
-  alphSlider.size(75);
-
-  strWghtSlider = createSlider(0.5, 10, 1);
-  strWghtSlider.size(75);
-
-  angleMultSlider = createSlider(0.1, 50, 5);
-  angleMultSlider.size(75);
-
-  particleNumSlider = createSlider(100, 3000, 300);
-  particleNumSlider.size(75);
-
-
-
-  // video = createCapture(VIDEO); //{ flipped: true }
-  // video.hide();
-  // poseNet = ml5.poseNet(video, modelLoaded);
-  // poseNet.on('pose', gotPoses);
-  // translate(width / 3, height / 4);
+  video = createCapture(VIDEO); //{ flipped: true }
+  video.hide();
+  poseNet = ml5.poseNet(video, modelLoaded);
+  poseNet.on('pose', gotPoses);
+  // translate(width / 2, height / 2);
 }
 
 function gotPoses(poses) {
-  console.log(poses);
+  // console.log(poses);
   if (poses.length > 0) {
     pose = poses[0].pose;
     skeleton = poses[0].skeleton;
@@ -85,14 +58,6 @@ function modelLoaded() {
 }
 
 function draw() {
-  text('hue:' + hueIncSlider.value(), 20, 20);
-  text('sat:' + satSlider.value(), 20, 40);
-  text('bright:' + brightSlider.value(), 20, 60);
-  text('alph:' + alphSlider.value(), 20, 80);
-  text('strWght:' + strWghtSlider.value(), 20, 100);
-  text('angleMult:' + angleMultSlider.value(), 20, 120);
-  text('particleNum:' + particleNumSlider.value(), 20, 140);
-
   drawField();
 
   // push();
@@ -102,34 +67,45 @@ function draw() {
   // pop();
 
 
+  if (pose) {
+    let nose = pose.nose;
+    let wristL = pose.leftWrist;
+    let wristR = pose.rightWrist;
+    let ankleL = pose.leftAnkle;
+    let ankleR = pose.rightAnkle;
 
-  // scale(-1, 1);    // flip x-axis backwards
+    // fill(150);
+    // rect(0, 0, 250, 100);
+    // fill(0);
+    // textSize(30);
+    // text('bright ' + bright, 10, 30);
+    // text('alph ' + alph, 10, 60);
 
-  // if (pose) {
-  //   let eyeR = pose.rightEye;
-  //   let eyeL = pose.leftEye;
-  //   let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
-  //   fill(255, 0, 0);
-  //   ellipse(pose.nose.x, pose.nose.y, d);
-  //   fill(0, 0, 255);
-  //   ellipse(pose.rightWrist.x, pose.rightWrist.y, 32);
-  //   ellipse(pose.leftWrist.x, pose.leftWrist.y, 32);
-  //   for (let i = 0; i < pose.keypoints.length; i++) {
-  //     let x = pose.keypoints[i].position.x;
-  //     let y = pose.keypoints[i].position.y;
 
-  //     fill(0, 255, 0);
-  //     ellipse(x, y, 16, 16);
-  //   }
-  //   for (let i = 0; i < skeleton.length; i++) {
-  //     let a = skeleton[i][0];
-  //     let b = skeleton[i][1];
-  //     strokeWeight(2);
-  //     stroke(255);
-  //     line(a.position.x, a.position.y, b.position.x, b.position.y);
-  //   }
-  // }
+    strWght = map(nose.x, width * .25, width * .75, 5, 0.5);
 
+    hueInc = map(wristL.x, 0, width / 2, 5.5, .01);
+
+    sat = map(wristR.x, 0, width / 2, 100, 10);
+
+    bright = map(wristL.y, 0, height - 10, 120, 10);
+
+    alph = map(wristR.y, 0, height - 10, 120, 10);
+
+    angleMult = map(ankleL.x, 0, width, 25, 0.1);
+
+    zOffInc = map(ankleR.x, 0, width + 100, 1.5, 0.001);
+
+
+    fill(100);
+    ellipse(nose.x, nose.y, 30);
+    ellipse(wristL.x, wristL.y, 30);
+    ellipse(wristR.x, wristR.y, 30);
+    ellipse(ankleL.x, ankleL.y, 30);
+    ellipse(ankleR.x, ankleR.y, 30);
+
+
+  }
 }
 
 function drawField() {
@@ -145,7 +121,7 @@ function drawField() {
       xOff += inc;
     }
     yOff += inc;
-    zOff += inc / 5;
+    zOff += zOffInc;
   }
 
   for (let i = 0; i < particles.length; i++) {
@@ -156,4 +132,19 @@ function drawField() {
     particles[i].show();
   }
 
+  hu += hueInc;
+
+  if (hu > 360) {
+    hu = 0;
+  }
+
+}
+
+function keyTyped() {
+  if (key === 's') {
+    saveCanvas('wichacks-flowform', 'png');
+  }
+  if (key === 'f') {
+    fullscreen(true);
+  }
 }

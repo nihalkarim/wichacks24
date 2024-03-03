@@ -8,8 +8,10 @@ class Particle {
     }
 
     show() {
-        stroke(hueInc, satInc, brightInc, alph);
+        stroke(hu, sat, bright, alph);
         strokeWeight(strWght);
+        // stroke(0);
+        //strokeWeight(1);
         line(this.pos.x, this.pos.y, this.prevPos.x, this.prevPos.y);
         this.updatePrev();
     }
